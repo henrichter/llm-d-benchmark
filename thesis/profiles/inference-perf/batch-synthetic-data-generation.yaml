@@ -1,0 +1,38 @@
+load:
+  type: concurrent
+data:
+  type: conversation_replay
+  conversation_replay:
+    seed: 42
+    num_conversations: 40
+    shared_system_prompt_len: 2000
+    turns_per_conversation:
+      type: fixed
+      mean: 1
+    input_tokens_per_turn:
+      type: lognormal
+      min: 50
+      max: 15000
+      mean: 500
+      std_dev: 1200
+    output_tokens_per_turn:
+      type: uniform
+      min: 500
+      max: 8000
+      mean: 4000
+      std_dev: 2500
+api:
+  type: completion
+  streaming: true
+server:
+  type: vllm
+  model_name: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL
+  base_url: REPLACE_ENV_LLMDBENCH_HARNESS_STACK_ENDPOINT_URL
+report:
+  request_lifecycle:
+    summary: true
+    per_stage: true
+    per_request: true
+storage:
+  local_storage:
+    path: /workspace
