@@ -1,0 +1,25 @@
+load:
+  type: concurrent
+api:
+  type: completion
+  streaming: true
+server:
+  type: vllm
+  model_name: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL
+  base_url: REPLACE_ENV_LLMDBENCH_HARNESS_STACK_ENDPOINT_URL
+data:
+  type: random
+  input_distribution:
+    type: fixed
+    mean: 512
+  output_distribution:
+    type: fixed
+    mean: 2048
+report:
+  request_lifecycle:
+    summary: true
+    per_stage: true
+    per_request: true
+storage:
+  local_storage:
+    path: /workspace
