@@ -202,13 +202,13 @@ class AdminPrerequisitesStep(Step):
         deploy_methods = context.deployed_methods or []
         modelservice_active = "modelservice" in deploy_methods
         gateway_class = (plan_config.get("gateway") or {}).get("className", "")
-        direct_service_mode = modelservice_active and gateway_class == "none"
 
         if modelservice_active:
-            if direct_service_mode:
+            if gateway_class in ("none", "aibrix"):
                 context.logger.log_info(
-                    "✅ gateway.className=none -- skipping Gateway API, "
-                    "inference extension, and gateway provider prerequisites"
+                    f"✅ gateway.className={gateway_class} -- skipping Gateway "
+                    "API, inference extension, and gateway provider "
+                    "prerequisites"
                 )
             else:
                 self._install_gateway_api_crds(

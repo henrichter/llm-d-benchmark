@@ -29,6 +29,7 @@ from llmdbenchmark.utilities.endpoint import (
     find_gateway_endpoint,
     find_direct_modelservice_endpoint,
     find_epponly_endpoint,
+    find_aibrix_endpoint,
     resolve_direct_service_namespace,
 )
 
@@ -113,6 +114,8 @@ class InferenceTestStep(Step):
                 namespace,
                 model_id_label,
             )
+        elif gateway_class == "aibrix":
+            service_ip, _, gateway_port = find_aibrix_endpoint(cmd, namespace)
         elif gateway_class == "none":
             service_ip, _, gateway_port = find_direct_modelservice_endpoint(
                 cmd,

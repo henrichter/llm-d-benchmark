@@ -1,0 +1,5 @@
+{% if standalone.enabled is defined and not standalone.enabled and not (kustomize.enabled | default(false)) %}
+{% if gateway.className | default('') == 'aibrix' %}
+{{ aibrix | toyaml }}
+{% endif %}
+{% endif %}

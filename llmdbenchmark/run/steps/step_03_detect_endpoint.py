@@ -9,6 +9,7 @@ from llmdbenchmark.utilities.endpoint import (
     find_fma_endpoint,
     find_gateway_endpoint,
     find_epponly_endpoint,
+    find_aibrix_endpoint,
     find_direct_modelservice_endpoint,
     find_custom_endpoint,
     find_kustomize_endpoint,
@@ -147,6 +148,11 @@ class DetectEndpointStep(Step):
                     cmd,
                     namespace,
                     model_id_label,
+                )
+            elif gateway_class == "aibrix":
+                service_ip, service_name, gateway_port = find_aibrix_endpoint(
+                    cmd,
+                    namespace,
                 )
             elif gateway_class == "none":
                 model_id_label = plan_config.get("model_id_label", "")
