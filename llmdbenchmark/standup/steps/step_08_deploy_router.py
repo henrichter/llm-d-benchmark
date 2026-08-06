@@ -49,8 +49,13 @@ class DeployRouterStep(Step):
                 message="Direct Service mode does not deploy a router",
                 stack_name=stack_path.name,
             )
+        release_suffix = "router"
+        values_key = "12_router-values"
+        if gateway_class == "aibrix":
+            release_suffix = "aibrix"
+            values_key = "12_aibrix-values"
 
-        router_values = self._find_yaml(stack_path, "12_router-values")
+        router_values = self._find_yaml(stack_path, values_key)
 
         if not router_values:
             return StepResult(
@@ -81,7 +86,7 @@ class DeployRouterStep(Step):
         model_id_label = plan_config.get("model_id_label", "")
         if model_id_label and not context.dry_run:
             self._clear_wedged_release(
-                cmd, context, namespace, f"{model_id_label}-router"
+                cmd, context, namespace, f"{model_id_label}-{release_suffix}"
             )
 
         if helmfile_work.exists():
@@ -89,7 +94,7 @@ class DeployRouterStep(Step):
                 "--namespace",
                 namespace,
                 "--selector",
-                f"name={model_id_label}-router",
+                f"name={model_id_label}-{release_suffix}",
                 "apply",
                 "-f",
                 str(helmfile_work),
@@ -105,7 +110,7 @@ class DeployRouterStep(Step):
                     "--namespace",
                     namespace,
                     "--selector",
-                    f"name={model_id_label}-router",
+                    f"name={model_id_label}-{release_suffix}",
                     "apply",
                     "-f",
                     str(main_helmfile),
@@ -117,13 +122,13 @@ class DeployRouterStep(Step):
 
         # Wait for gateway pod only (not EPP -- it stays NOT_SERVING until step 09)
         if not errors and not context.dry_run:
-            if gateway_class == "epponly":
+            if gateway_class in ("epponly", "aibrix"):
                 # No Gateway resource is deployed in epponly mode; the EPP
                 # pod itself is the data-plane proxy and is waited on by
                 # step_09 once the model servers come up.
                 context.logger.log_info(
-                    "gateway.className=epponly -- no Gateway pod to wait "
-                    "for; EPP readiness is verified in step 09 after the "
+                    f"gateway.className={gateway_class} -- no Gateway pod to "
+                    "wait for; EPP readiness is verified in step 09 after the "
                     "model servers are deployed"
                 )
             else:

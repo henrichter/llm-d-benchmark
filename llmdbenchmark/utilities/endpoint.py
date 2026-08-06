@@ -309,6 +309,23 @@ def find_direct_modelservice_endpoint(
     return service_ip, svc_name, service_port
 
 
+def find_aibrix_endpoint(
+    cmd: CommandExecutor,
+    namespace: str,
+) -> tuple[str | None, str | None, str]:
+    """Find the AIBrix gateway-plugins service for an ``aibrix`` deployment.
+
+    AIBrix brings its own sidecar-Envoy router; clients hit the
+    ``aibrix-gateway-plugins`` service on the envoy-http port (10080) directly.
+    """
+    return find_custom_endpoint(
+        cmd,
+        namespace,
+        "aibrix-gateway-plugins",
+        preferred_port=10080,
+    )
+
+
 def find_gateway_endpoint(
     cmd: CommandExecutor, namespace: str, release: str
 ) -> tuple[str | None, str | None, str]:
@@ -543,12 +560,12 @@ def find_custom_endpoint(
                     "--namespace",
                     namespace,
                     "-o",
-                    f"jsonpath={{.spec.ports[?(@.port=={preferred_port})].port}}",
+                    "jsonpath={.spec.ports[*].port}",
                     check=False,
                 )
-                port_val = port_result.stdout.strip() if port_result.success else ""
-                if port_val and port_val != "null":
-                    return svc_name, svc_name, port_val
+                ports = port_result.stdout.split() if port_result.success else []
+                if str(preferred_port) in ports:
+                    return svc_name, svc_name, str(preferred_port)
 
             for port_name in ("http", "https", "default"):
                 port_result = cmd.kube(

@@ -18,6 +18,7 @@ from llmdbenchmark.utilities.endpoint import (
     _normalize_url_prefix,
     _rand_suffix,
     compute_gateway_path_prefix,
+    find_aibrix_endpoint,
     find_custom_endpoint,
     find_direct_modelservice_endpoint,
     find_epponly_endpoint,
@@ -150,6 +151,8 @@ class BaseSmoketest:
                 namespace,
                 model_id_label,
             )
+        elif gateway_class == "aibrix":
+            service_ip, _, gateway_port = find_aibrix_endpoint(cmd, namespace)
         elif gateway_class == "none":
             direct_service_namespace = resolve_direct_service_namespace(
                 plan_config, namespace
@@ -197,6 +200,7 @@ class BaseSmoketest:
         )
         standalone_role = _nested_get(plan_config, "standalone", "role") or "standalone"
         is_kustomize = "kustomize" in context.deployed_methods
+        is_aibrix = (_nested_get(plan_config, "gateway", "className") or "") == "aibrix"
         guide_name = _nested_get(plan_config, "kustomize", "guideName") or ""
 
         # skip base healh checks for FMA
@@ -389,7 +393,7 @@ class BaseSmoketest:
         # 2. Health check (/health) - skip when the endpoint doesn't
         # serve /health directly (EPP proxies /v1/* only; shared
         # HTTPRoute with rewriteTo narrows to /v1/* paths).
-        if is_kustomize:
+        if is_kustomize or is_aibrix:
             context.logger.log_info(
                 "Skipping /health probe: EPP proxies inference requests "
                 "(/v1/*) only. /v1/models + direct-pod-IP health check "

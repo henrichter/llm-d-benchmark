@@ -4,7 +4,7 @@
 {# `epponly` renders no infra values: no Gateway is installed, the standalone
   router chart provides HTTP service directly via the EPP Envoy sidecar.
   `none` also renders no infra values because clients use a plain Service. #}
-{% if gw_class in ['epponly', 'none'] %}
+{% if gw_class in ['epponly', 'none', 'aibrix'] %}
 {% elif gw_class == 'gke' %}
 {# ── GKE: managed gateway with destinationRule ── #}
 gateway:

@@ -722,6 +722,7 @@ class RenderPlans:
     _SUPPORTED_GATEWAY_CLASSES: tuple[str, ...] = (
         "none",
         "epponly",
+        "aibrix",
         "istio",
         "agentgateway",
         "gke",
@@ -856,7 +857,7 @@ class RenderPlans:
         """
         gateway_class = (values.get("gateway") or {}).get("className", "")
         modelservice_enabled = (values.get("modelservice") or {}).get("enabled", True)
-        if gateway_class == "none" and modelservice_enabled:
+        if gateway_class in ("none", "aibrix") and modelservice_enabled:
             routing = values.setdefault("routing", {})
             routing.setdefault("proxy", {})["enabled"] = False
 

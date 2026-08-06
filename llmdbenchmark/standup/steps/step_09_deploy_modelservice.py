@@ -54,6 +54,7 @@ class DeployModelserviceStep(Step):
         )  # Generic timeout for all pods in step 9
         gateway_class = self._require_config(plan_config, "gateway", "className")
         direct_service_mode = gateway_class == "none"
+        gateway_less = gateway_class in ("none", "aibrix")
         if direct_service_mode:
             namespace = resolve_direct_service_namespace(plan_config, namespace)
 
@@ -243,7 +244,7 @@ class DeployModelserviceStep(Step):
             #
             # Probe both candidate labels once each so we discover which
             # the chart actually applied, then wait on that one.
-            if not direct_service_mode:
+            if not gateway_less:
                 release_epp = f"{model_id_label}-router-epp"
                 chosen_label = f"llm-d-router-gateway={release_epp}"  # default
                 for candidate_key in (
@@ -321,6 +322,8 @@ class DeployModelserviceStep(Step):
 
         if direct_service_mode:
             service_name = f"{model_id_label}-direct"
+        elif gateway_class == "aibrix":
+            service_name = "aibrix-gateway-plugins"
         elif gateway_class in ("kgateway", "agentgateway"):
             service_name = f"infra-{release}-inference-gateway"
         else:
@@ -401,7 +404,7 @@ class DeployModelserviceStep(Step):
 
         if not errors:
             resource_types = "deployment,service,pods"
-            if not direct_service_mode:
+            if not gateway_less:
                 resource_types += ",gateway,httproute"
                 if context.is_openshift:
                     resource_types += ",route"

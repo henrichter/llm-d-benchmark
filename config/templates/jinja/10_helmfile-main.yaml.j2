@@ -21,12 +21,16 @@ helmDefaults:
    keys directly -- see 12_router-values.yaml.j2 for the renderer. #}
 {% set _epponly = (gateway.className | default('') == 'epponly') %}
 {% set _direct = (gateway.className | default('') == 'none') %}
+{% set _aibrix = (gateway.className | default('') == 'aibrix') %}
 {% set _gaie_chart = 'oci://ghcr.io/llm-d/charts/llm-d-router-standalone' if _epponly else 'oci://ghcr.io/llm-d/charts/llm-d-router-gateway' %}
+{% set _aibrix_chart = 'oci://ghcr.io/henrichter/charts/aibrix' %}
+
+{% set _no_llmd_router = _direct or _aibrix %}
 
 repositories:
   - name: llm-d-modelservice
     url: {{ helmRepositories.llmDModelservice.url }}
-{% if not _direct %}
+{% if not _no_llmd_router %}
   - name: llm-d-infra
     url: {{ helmRepositories.llmDInfra.url }}
 {% endif %}
@@ -44,10 +48,10 @@ releases:
    that mix standalone + modelservice still install shared infra via the
    first modelservice stack, not a leading standalone one that can't.
 
-   `epponly` skips this release entirely - there is no Gateway resource. #}
+   `epponly`/`aibrix` skip this release entirely - there is no Gateway resource. #}
 {% set _is_shared_infra_owner = (stackIndex is not defined or stackIndex | int == sharedInfraStackIndex | default(1) | int) %}
 {% set _is_first_stack = _is_shared_infra_owner %}
-{% if _is_first_stack and not _epponly and not _direct %}
+{% if _is_first_stack and not _epponly and not _no_llmd_router %}
   - name: infra-llmdbench
     namespace: {{ gateway.namespace }}
     chart: llm-d-infra/llm-d-infra
@@ -65,9 +69,9 @@ releases:
     chart: llm-d-modelservice/llm-d-modelservice
     version: {{ chartVersions.llmDModelservice }}
     installed: true
-    {% if not _direct %}
+    {% if not _no_llmd_router %}
     needs:
-    {% if _is_first_stack and not _epponly and not _direct %}
+    {% if _is_first_stack and not _epponly and not _no_llmd_router %}
       - {{ gateway.namespace }}/infra-llmdbench
 {% endif %}
       - {{ gateway.namespace }}/{{ model_id_label }}-router
@@ -77,7 +81,7 @@ releases:
     labels:
       kind: inference-stack
 
-{% if not _direct %}
+{% if not _no_llmd_router %}
   - name: {{ model_id_label }}-router
     namespace: {{ gateway.namespace }}
     chart: {{ _gaie_chart }}
@@ -92,6 +96,18 @@ releases:
 {% endif %}
     values:
       - router-values.yaml
+    labels:
+      kind: inference-stack
+{% endif %}
+
+{% if _aibrix %}
+  - name: {{ model_id_label }}-aibrix
+    namespace: {{ gateway.namespace }}
+    chart: {{ _aibrix_chart }}
+    version: {{ chartVersions.aibrix }}
+    installed: true
+    values:
+      - aibrix-values.yaml
     labels:
       kind: inference-stack
 {% endif %}

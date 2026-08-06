@@ -14,6 +14,7 @@ from llmdbenchmark.utilities.endpoint import (
     find_standalone_endpoint,
     find_gateway_endpoint,
     find_epponly_endpoint,
+    find_aibrix_endpoint,
     find_direct_modelservice_endpoint,
     resolve_direct_service_namespace,
     test_model_serving,
@@ -66,6 +67,7 @@ class SmoketestStep(Step):
 
         gateway_class = plan_config.get("gateway", {}).get("className", "")
         is_epponly = gateway_class == "epponly"
+        is_aibrix = gateway_class == "aibrix"
         is_direct = gateway_class == "none"
         if is_direct and not is_standalone:
             namespace = resolve_direct_service_namespace(plan_config, namespace)
@@ -81,6 +83,8 @@ class SmoketestStep(Step):
                 namespace,
                 model_id_label,
             )
+        elif is_aibrix:
+            service_ip, _, gateway_port = find_aibrix_endpoint(cmd, namespace)
         elif is_direct:
             service_ip, _, gateway_port = find_direct_modelservice_endpoint(
                 cmd,
