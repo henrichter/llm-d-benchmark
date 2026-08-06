@@ -64,9 +64,9 @@ WORKDIR /workspace
 # Install harnesses
 RUN pip install --upgrade pip setuptools setuptools-rust wheel
 
-ARG INFERENCE_PERF_REPO=https://github.com/kubernetes-sigs/inference-perf.git
-ARG INFERENCE_PERF_BRANCH=v0.6.0
-ARG INFERENCE_PERF_COMMIT=v0.6.0
+ARG INFERENCE_PERF_REPO=https://github.com/henrichter/inference-perf.git
+ARG INFERENCE_PERF_BRANCH=feat/open-loop-conversation
+ARG INFERENCE_PERF_COMMIT=220429e244f61be59efcc715b99711770cd85127
 RUN git clone --branch ${INFERENCE_PERF_BRANCH} ${INFERENCE_PERF_REPO}
 RUN cd inference-perf; \
     git checkout ${INFERENCE_PERF_COMMIT}; \

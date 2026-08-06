@@ -6,27 +6,24 @@ on:
       - 'v*'  # Runs when a tag like v0.1.0 is pushed
   release:
     types: [published]  # Also runs when a GitHub release is published
+  workflow_dispatch:  # Allows manual builds, tagged with the short commit SHA
 
 jobs:
   docker-build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
 
-      - name: Set project name from repository
-        id: version
-        run: |
-          repo="${GITHUB_REPOSITORY##*/}"
-          echo "project_name=$repo" >> "$GITHUB_OUTPUT"
-
-      - name: Print project name
-        run: echo "Project is ${{ steps.version.outputs.project_name }}"
-
       - name: Determine tag name
         id: tag
         run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "tag=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
             echo "tag=${GITHUB_REF##refs/tags/}" >> "$GITHUB_OUTPUT"
           elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "tag=${GITHUB_REF##refs/tags/}" >> "$GITHUB_OUTPUT"
@@ -39,11 +36,11 @@ jobs:
         uses: ./.github/actions/docker-build-and-push
         with:
           tag: ${{ steps.tag.outputs.tag }}
-          image-name: ${{ steps.version.outputs.project_name }}
-          registry: ghcr.io/llm-d
-          github-token: ${{ secrets.GHCR_TOKEN }}
+          image-name: ${{ github.event.repository.name }}
+          registry: ghcr.io/${{ github.repository_owner }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy scan
         uses: ./.github/actions/trivy-scan
         with:
-          image: ghcr.io/llm-d/${{ steps.version.outputs.project_name }}:${{ steps.tag.outputs.tag }}
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.tag.outputs.tag }}
