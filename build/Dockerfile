@@ -64,14 +64,6 @@ WORKDIR /workspace
 # Install harnesses
 RUN pip install --upgrade pip setuptools setuptools-rust wheel
 
-ARG INFERENCE_PERF_REPO=https://github.com/kubernetes-sigs/inference-perf.git
-ARG INFERENCE_PERF_BRANCH=v0.6.0
-ARG INFERENCE_PERF_COMMIT=v0.6.0
-RUN git clone --branch ${INFERENCE_PERF_BRANCH} ${INFERENCE_PERF_REPO}
-RUN cd inference-perf; \
-    git checkout ${INFERENCE_PERF_COMMIT}; \
-    pip install .
-
 ARG VLLM_BENCHMARK_REPO=https://github.com/vllm-project/vllm.git
 ARG VLLM_BENCHMARK_BRANCH=v0.24.0
 ARG VLLM_BENCHMARK_COMMIT=v0.24.0
@@ -120,6 +112,14 @@ ARG AIPERF_COMMIT=v0.8.0
 RUN git clone --branch ${AIPERF_BRANCH} ${AIPERF_REPO}
 RUN cd aiperf; \
     git checkout ${AIPERF_COMMIT}; \
+    pip install .
+
+ARG INFERENCE_PERF_REPO=https://github.com/henrichter/inference-perf.git
+ARG INFERENCE_PERF_BRANCH=feat/weka-openloop
+ARG INFERENCE_PERF_COMMIT=1521565e5c676a781dce2e98d4b127063ca25cf6
+RUN git clone --branch ${INFERENCE_PERF_BRANCH} ${INFERENCE_PERF_REPO}
+RUN cd inference-perf; \
+    git checkout ${INFERENCE_PERF_COMMIT}; \
     pip install .
 
 RUN echo "inference-perf: ${INFERENCE_PERF_REPO} ${INFERENCE_PERF_BRANCH}" >> /workspace/repos.txt; \
