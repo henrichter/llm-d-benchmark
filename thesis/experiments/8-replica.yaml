@@ -1,0 +1,47 @@
+experiment:
+  name: 8-replica
+  harness: inference-perf
+
+setup:
+  constants:
+    decode.replicas: 8
+
+  treatments:
+    - name: aibrix-least-kv-cache
+      gateway.className: aibrix
+      router.inferencePool.create: false
+      aibrix.gatewayPlugin.container.envs.ROUTING_ALGORITHM: prefix-cache
+      aibrix.gatewayPlugin.container.envs.AIBRIX_PREFIX_CACHE_USE_REMOTE_TOKENIZER: true
+
+treatments:
+  - name: code-generation
+    profile: ../../../thesis/profiles/inference-perf/code-generation.yaml
+    load.stages:
+      - concurrent_sessions: 0
+        session_rate: 2.80
+        num_sessions: 168
+        timeout: 60
+      - concurrent_sessions: 0
+        session_rate: 1.50
+        num_sessions: 675
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 1.80
+        num_sessions: 810
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 2.10
+        num_sessions: 945
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 2.40
+        num_sessions: 1080
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 2.70
+        num_sessions: 1215
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 3.00
+        num_sessions: 1350
+        timeout: 450

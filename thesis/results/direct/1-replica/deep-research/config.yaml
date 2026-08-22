@@ -1,0 +1,158 @@
+api:
+  type: chat
+  streaming: true
+  headers: null
+  slo_unit: null
+  slo_tpot_header: null
+  slo_ttft_header: null
+  response_format: null
+  session_id_header_key: null
+data:
+  type: conversation_replay
+  path: null
+  corpus_file_path: null
+  input_distribution: null
+  output_distribution: null
+  shared_prefix: null
+  multimodal: null
+  trace: null
+  otel_trace_replay: null
+  weka_trace_replay: null
+  conversation_replay:
+    seed: 42
+    num_conversations: 183
+    shared_system_prompt_len: 2000
+    dynamic_system_prompt_len:
+      min: 2000
+      max: 150000
+      mean: 45000.0
+      std_dev: 35000.0
+      total_count: null
+      type: lognormal
+      variance: null
+      skew: 0.0
+    turns_per_conversation:
+      min: 2
+      max: 50
+      mean: 15.0
+      std_dev: 8.5
+      total_count: null
+      type: normal
+      variance: null
+      skew: 0.0
+    input_tokens_per_turn:
+      min: 500
+      max: 15000
+      mean: 3000.0
+      std_dev: 2500.0
+      total_count: null
+      type: lognormal
+      variance: null
+      skew: 0.0
+    output_tokens_per_turn:
+      min: 50
+      max: 4000
+      mean: 300.0
+      std_dev: 850.0
+      total_count: null
+      type: normal
+      variance: null
+      skew: 0.0
+    tool_call_latency_sec:
+      min: 5
+      max: 60
+      mean: 25.0
+      std_dev: 12.0
+      total_count: null
+      type: normal
+      variance: null
+      skew: 0.0
+    max_model_len: 262144
+  visionarena: null
+load:
+  type: trace_session_replay
+  interval: 1.0
+  stages:
+  - concurrent_sessions: 0
+    session_rate: 0.1
+    num_sessions: 6
+    timeout: 60.0
+  - concurrent_sessions: 0
+    session_rate: 0.04
+    num_sessions: 18
+    timeout: 450.0
+  - concurrent_sessions: 0
+    session_rate: 0.05
+    num_sessions: 23
+    timeout: 450.0
+  - concurrent_sessions: 0
+    session_rate: 0.06
+    num_sessions: 27
+    timeout: 450.0
+  - concurrent_sessions: 0
+    session_rate: 0.07
+    num_sessions: 32
+    timeout: 450.0
+  - concurrent_sessions: 0
+    session_rate: 0.08
+    num_sessions: 36
+    timeout: 450.0
+  - concurrent_sessions: 0
+    session_rate: 0.09
+    num_sessions: 41
+    timeout: 450.0
+  sweep: null
+  num_workers: 16
+  worker_max_concurrency: 100
+  worker_max_tcp_connections: 2500
+  trace: null
+  circuit_breakers: []
+  request_timeout: null
+  lora_traffic_split: null
+  base_seed: 1786607186714
+metrics: null
+report:
+  request_lifecycle:
+    summary: true
+    per_stage: true
+    per_request: false
+    per_adapter: true
+    per_adapter_stage: false
+    percentiles:
+    - 0.1
+    - 1.0
+    - 5.0
+    - 10.0
+    - 25.0
+    - 50.0
+    - 75.0
+    - 90.0
+    - 95.0
+    - 99.0
+    - 99.9
+    use_server_output_tokens: false
+    max_error_messages: 100
+  prometheus:
+    summary: true
+    per_stage: false
+  session_lifecycle:
+    summary: true
+    per_stage: true
+    per_session: false
+  goodput: null
+storage:
+  local_storage:
+    path: /requests/inference-perf-deep-research-1786607183-prtfwa_1
+    report_file_prefix: null
+  google_cloud_storage: null
+  simple_storage_service: null
+server:
+  type: vllm
+  model_name: Qwen/Qwen3.5-27B
+  base_url: http://100.109.22.252:8000
+  ignore_eos: true
+  api_key: null
+  cert_path: null
+  key_path: null
+tokenizer: null
+circuit_breakers: null

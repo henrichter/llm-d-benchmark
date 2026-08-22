@@ -1,0 +1,84 @@
+experiment:
+  name: 4-replica
+  harness: inference-perf
+
+setup:
+  constants:
+    decode.replicas: 4
+
+  treatments:
+    - name: none
+      gateway.className: none
+
+    - name: llmd-active-request
+      router.epp.pluginsConfigFile: llmd-active-request.yaml
+
+    - name: aibrix-least-kv-cache
+      gateway.className: aibrix
+      router.inferencePool.create: false
+      aibrix.gatewayPlugin.container.envs.ROUTING_ALGORITHM: least-kv-cache
+
+treatments:
+  - name: batch-summarization-rag
+    profile: ../../../thesis/profiles/inference-perf/batch-summarization-rag.yaml
+    load.stages:
+      - concurrent_sessions: 0
+        session_rate: 2.80
+        num_sessions: 168
+        timeout: 60
+      - concurrent_sessions: 0
+        session_rate: 1.50
+        num_sessions: 675
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 1.80
+        num_sessions: 810
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 2.10
+        num_sessions: 945
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 2.40
+        num_sessions: 1080
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 2.70
+        num_sessions: 1215
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 3.00
+        num_sessions: 1350
+        timeout: 450
+
+  - name: deep-research
+    profile: ../../../thesis/profiles/inference-perf/deep-research.yaml
+    load.stages:
+      - concurrent_sessions: 0
+        session_rate: 0.50
+        num_sessions: 30
+        timeout: 60
+      - concurrent_sessions: 0
+        session_rate: 0.20
+        num_sessions: 90
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.24
+        num_sessions: 108
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.28
+        num_sessions: 126
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.32
+        num_sessions: 144
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.36
+        num_sessions: 162
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.40
+        num_sessions: 180
+        timeout: 450

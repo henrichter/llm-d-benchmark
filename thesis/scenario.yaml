@@ -1,0 +1,220 @@
+scenario:
+  - name: baseline
+    kustomize:
+      enabled: false
+
+    model:
+      name: Qwen/Qwen3.5-27B
+      shortName: qwen-qwen35-27b
+      path: models/Qwen/Qwen3.5-27B
+      huggingfaceId: Qwen/Qwen3.5-27B
+      maxModelLen: 262144
+      blockSize: 64
+      gpuMemoryUtilization: 0.95
+
+    modelservice:
+      enabled: true
+
+    routing:
+      proxy:
+        enabled: false
+
+    gateway:
+      className: epponly
+
+    router:
+      inferencePool:
+        create: true
+      epp:
+        replicas: 1
+        flags:
+          v: 2
+        resources:
+          requests:
+            cpu: "4"
+            memory: 8Gi
+          limits:
+            memory: 16Gi
+        pluginsCustomConfig:
+          llmd-random.yaml: |
+            apiVersion: llm-d.ai/v1alpha1
+            kind: EndpointPickerConfig
+            plugins:
+              - type: random-picker
+            schedulingProfiles:
+              - name: default
+                plugins:
+                  - pluginRef: random-picker
+          llmd-active-request.yaml: |
+            apiVersion: llm-d.ai/v1alpha1
+            kind: EndpointPickerConfig
+            plugins:
+              - type: inflight-load-producer
+              - type: active-request-scorer
+            schedulingProfiles:
+              - name: default
+                plugins:
+                  - pluginRef: active-request-scorer
+          llmd-precise-prefix-cache.yaml: |
+            apiVersion: llm-d.ai/v1alpha1
+            kind: EndpointPickerConfig
+            plugins:
+              - type: token-producer
+                parameters:
+                  modelName: Qwen/Qwen3.5-27B
+                  vllm:
+                    url: "http://precise-prefix-cache-routing-render:8000"
+              - type: endpoint-notification-source
+              - type: precise-prefix-cache-producer
+                parameters:
+                  tokenProcessorConfig:
+                    blockSizeTokens: 64
+                  speculativeIndexing: true
+                  indexerConfig:
+                    kvBlockIndexConfig:
+                      enableMetrics: true
+                  kvEventsConfig:
+                    concurrency: 8
+                    podDiscoveryConfig:
+                      socketPort: 5556
+                      replaySocketPort: 5559
+              - type: inflight-load-producer
+                parameters:
+                  prefixMatchInfoProducerName: precise-prefix-cache-producer
+              - type: prefix-cache-affinity-filter
+                parameters:
+                  prefixMatchInfoProducerName: precise-prefix-cache-producer
+                  peakPrefillThroughput: 15926
+              - type: token-load-scorer
+            dataLayer:
+              sources:
+                - pluginRef: endpoint-notification-source
+                  extractors:
+                    - pluginRef: precise-prefix-cache-producer
+            schedulingProfiles:
+              - name: default
+                plugins:
+                  - pluginRef: prefix-cache-affinity-filter
+                  - pluginRef: token-load-scorer
+          dynamo-random.yaml: |
+            apiVersion: inference.networking.x-k8s.io/v1alpha1
+            kind: EndpointPickerConfig
+            plugins:
+              - type: random-picker
+            schedulingProfiles:
+              - name: default
+                plugins:
+                  - pluginRef: random-picker
+
+      proxy:
+        args:
+          - "--service-node"
+          - "envoy-sidecar"
+          - "--log-level"
+          - "warn"
+          - "--concurrency"
+          - "8"
+          - "--drain-strategy"
+          - "immediate"
+          - "--drain-time-s"
+          - "60"
+          - "-c"
+          - "/etc/envoy/envoy.yaml"
+        resources:
+          requests:
+            cpu: "4"
+            memory: 8Gi
+          limits:
+            memory: 16Gi
+
+      modelServers:
+        protocol: http
+        matchLabels:
+          llm-d.ai/guide: "scenario"
+      tracing:
+        enabled: false
+
+    standalone:
+      enabled: false
+
+    prefill:
+      enabled: false
+
+    decode:
+      acceleratorType:
+        labelKey: nvidia.com/gpu.product
+        labelValue: NVIDIA-H200
+      vllm:
+        additionalFlags:
+          - "--enable-prefix-caching"
+          - "--language-model-only"
+          - "--quantization=fp8"
+          - "--default-chat-template-kwargs='{\"enable_thinking\":false}'"
+          - "--enable-prompt-tokens-details"
+          - "--kv-events-config='{\"enable_kv_cache_events\":true,\"publisher\":\"zmq\",\"endpoint\":\"$(KV_EVENTS_ENDPOINT)\",\"replay_endpoint\":\"$(KV_EVENTS_REPLAY_ENDPOINT)\",\"topic\":\"kv@$(POD_IP):8000@Qwen/Qwen3.5-27B\"}'"
+      extraEnvVars:
+        - name: KV_EVENTS_ENDPOINT
+          value: "tcp://*:5556"
+        - name: KV_EVENTS_REPLAY_ENDPOINT
+          value: "tcp://*:5559"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+      resources:
+        limits:
+          memory: 64Gi
+          cpu: "16"
+        requests:
+          memory: 64Gi
+          cpu: "16"
+      extraContainerConfig:
+        ports:
+          - containerPort: 5556
+            name: kv-events
+            protocol: TCP
+          - containerPort: 5559
+            name: kv-replay
+            protocol: TCP
+        securityContext:
+          capabilities:
+            add:
+              - "IPC_LOCK"
+              - "SYS_RAWIO"
+          runAsGroup: 0
+          runAsUser: 0
+
+    vllmCommon:
+      flags:
+        enforceEager: false
+
+    storage:
+      modelPvc:
+        size: 128Gi
+
+    modelArtifacts:
+      extraLabels:
+        model.aibrix.ai/port: "8000"
+
+    annotations:
+      decode:
+        pod:
+          model.aibrix.ai/name: Qwen/Qwen3.5-27B
+
+    aibrix:
+      gatewayPlugin:
+        container:
+          resources:
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+
+    images:
+      benchmark:
+        repository: ghcr.io/henrichter/llm-d-benchmark
+        tag: sha-27eb0f0
+
+    workDir: "~/data/thesis"
+    harness:
+      name: inference-perf
+      waitTimeout: 10800

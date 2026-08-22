@@ -1,21 +1,15 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
-NAMESPACE="llmdbench"
-DEPLOY="deploy/devbox"
-DEST="/workspace/llm-d-benchmark"
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-echo ">> syncing $REPO_ROOT -> ${NAMESPACE}/${DEPLOY}:${DEST}"
-kubectl exec -n "$NAMESPACE" "$DEPLOY" -- mkdir -p "$DEST"
+echo ">> syncing $REPO_ROOT -> ${NAMESPACE}/${DEVBOX_DEPLOY}:${DEVBOX_DEST}"
+kubectl exec -n "$NAMESPACE" "$DEVBOX_DEPLOY" -- mkdir -p "$DEVBOX_DEST"
 
-RSH="sh -c 'shift; exec kubectl exec -n $NAMESPACE -i $DEPLOY -- \"\$@\"' rsh"
+RSH="sh -c 'shift; exec kubectl exec -n $NAMESPACE -i $DEVBOX_DEPLOY -- \"\$@\"' rsh"
 rsync -azi --delete \
   --exclude '.git/' \
   --filter=':- .gitignore' \
   -e "$RSH" \
-  ./ "x:${DEST}/"
+  ./ "x:${DEVBOX_DEST}/"
 echo "done."

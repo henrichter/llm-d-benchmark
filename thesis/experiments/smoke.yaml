@@ -1,0 +1,36 @@
+experiment:
+  name: 2-replica-smoke
+  harness: inference-perf
+  profile: sanity_random.yaml
+
+setup:
+  constants:
+    decode.replicas: 2
+
+  treatments:
+    - name: direct
+      gateway.className: none
+
+    - name: aibrix-random
+      gateway.className: aibrix
+      router.inferencePool.create: false
+      aibrix.gatewayPlugin.container.envs.ROUTING_ALGORITHM: random
+
+    - name: llmd
+      router.epp.pluginsConfigFile: llmd-random.yaml
+
+    - name: dynamo
+      router.epp.image:
+        registry: nvcr.io
+        repository: nvidia/ai-dynamo/dynamo-frontend
+        tag: "1.2.1"
+      router.epp.pluginsConfigFile: dynamo-random.yaml
+
+treatments:
+  - name: cc-traces-weka-with-subagents-060826
+    profile: ../../../thesis/profiles/semianalysisai/cc-traces-weka-with-subagents-060826.yaml
+    load.stages:
+      - session_rate: 2
+        timeout: 60
+      - session_rate: 3
+        timeout: 120

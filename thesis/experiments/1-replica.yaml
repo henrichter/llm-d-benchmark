@@ -1,0 +1,76 @@
+experiment:
+  name: 1-replica
+  harness: inference-perf
+
+setup:
+  constants:
+    decode.replicas: 1
+
+  treatments:
+    - name: none
+      gateway.className: none
+
+treatments:
+  - name: batch-summarization-rag
+    profile: ../../../thesis/profiles/inference-perf/batch-summarization-rag.yaml
+    load.stages:
+      - concurrent_sessions: 0
+        session_rate: 0.90
+        num_sessions: 54
+        timeout: 60
+      - concurrent_sessions: 0
+        session_rate: 0.30
+        num_sessions: 135
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.40
+        num_sessions: 180
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.50
+        num_sessions: 225
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.60
+        num_sessions: 270
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.70
+        num_sessions: 315
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.80
+        num_sessions: 360
+        timeout: 450
+
+  - name: deep-research
+    profile: ../../../thesis/profiles/inference-perf/deep-research.yaml
+    load.stages:
+      - concurrent_sessions: 0
+        session_rate: 0.10
+        num_sessions: 6
+        timeout: 60
+      - concurrent_sessions: 0
+        session_rate: 0.04
+        num_sessions: 18
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.05
+        num_sessions: 23
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.06
+        num_sessions: 27
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.07
+        num_sessions: 32
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.08
+        num_sessions: 36
+        timeout: 450
+      - concurrent_sessions: 0
+        session_rate: 0.09
+        num_sessions: 41
+        timeout: 450

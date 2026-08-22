@@ -1,0 +1,28 @@
+load:
+  type: trace_session_replay
+  num_workers: 16
+  worker_max_concurrency: 64
+data:
+  type: weka_trace_replay
+  weka_trace_replay:
+    static_model_name: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL
+    default_block_size: 64
+api:
+  type: chat
+  streaming: true
+server:
+  type: vllm
+  model_name: REPLACE_ENV_LLMDBENCH_DEPLOY_CURRENT_MODEL
+  base_url: REPLACE_ENV_LLMDBENCH_HARNESS_STACK_ENDPOINT_URL
+report:
+  request_lifecycle:
+    summary: true
+    per_stage: true
+    per_request: true
+  session_lifecycle:
+    summary: true
+    per_stage: true
+    per_session: true
+storage:
+  local_storage:
+    path: /workspace
